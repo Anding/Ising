@@ -1,11 +1,17 @@
-variable Xn
+\ Ising model simulation in FORTH
+\ Andrew Read
+\ (C) 2012, GNU General Public License
+\ \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+\ Random number generator - algorithm from Kunth 3.6
+variable Xn		\ last random number
 
 : seed ( u --, seed the random series with n)
 	Xn !
 ;
 
-: rnd ( -- u, random number between 0 and 2^32 - 1)
-	Xn dup @ 3141592621 UM*				\ Algorithm from Knuth 3.6
+: rnd ( -- u, random number between 0 and 2^32 - 1, often treated as a fraction)
+	Xn dup @ 3141592621 UM*
 	1 0 D+
 	drop
 	dup rot !
@@ -15,9 +21,11 @@ variable Xn
 	rnd um* nip
 ;
 
+\ Special purpose lookup tables for calculating Exp( - Beta * DeltaE)
+
 create logtab		\ Logarithms corresponding to the exponentials in the table below	
 0 ,			\ expressed as x/8, in fractional format		
-17044952 ,
+17044952 ,		\ a binary search algorithm finds bucket appropriate the given value of x/8 in this table
 34648854 ,
 52849611 ,
 71689120 ,
@@ -52,7 +60,7 @@ create logtab		\ Logarithms corresponding to the exponentials in the table below
 
 
 create exptab		\ evenly spaced probabilites in the range 0 <= x < 1
-4294967295 ,		\ first value dummy
+4294967295 ,		\ for each bucket in the table above, this table returns the mid-bucket probability given by Exp(-x)
 4227858432 ,
 4093640704 ,
 3959422976 ,
@@ -91,44 +99,46 @@ hex
 80000000 constant 1<<31
 decimal
 
-: negexp ( frac int -- frac, return Exp[-x] where x is a postive number expressed as frac and int)
-		1<<29 *		\ 29 lshift optimized using a multiply
+: negexp ( frac int -- frac, return Exp[-x] where x is a postive number expressed as frac and int and int < 8)
+		\ first convert frac int to a single frac by dividing by 8 and combining the fractional and integer parts
+		1<<29 *				\ 29 lshift optimized using a multiply
 		swap 
 		3 rshift 
-		or			\ x <- x/8, in fractional format (assumes 32 bit wordsize)
+		or					\ x <- x/8, in fractional format (assumes 32 bit wordsize)
+		\ use a binary search algorthm to find the appropriate bucket for x/8 in the log tab
 		>R
-		32 logtab 64 + 
-		BEGIN			\ binary search for the appropriate bucket in logtab	
+		32 logtab 64 + 	( delta address)
+		BEGIN				
 			dup @
-			R@ U< IF
-				over +
-				true	
-			ELSE
+			R@ U< IF			\ bucket is smaller than x/8, continue search
+				over +			\ add the delta to address to move up the table
+				true			\ flag to indicate repeat
+			ELSE				\ bucket is greater than x/8
 				dup 4 - @
-				R@ U> IF
+				R@ U> IF		\ prior bucket is also greater than than x/8, continue search
 					over -
 					true				
-				else
-					false				
+				else			\ prior bucket is smaller than or equal to x/8, so this is the correct bucket
+					false		\ flag to indicate end search		
 				THEN
 			THEN
 		WHILE
-			swap 2/
-			dup 2 = if drop 4 then
-			swap
+			swap 2/			\ halve the value of delta for the next iteration
+			4 max				\ minimum value of delta must be 4 - the size of a table entry
+			swap		( delta' address')
 		REPEAT
-		nip R> drop
-		logtab - exptab + @				\ lookup the corresponding exponential
+		nip R> drop		( address)
+		logtab - exptab + @			\ lookup the corresponding exponential
 ;
 
 	
-variable dimension
-variable modulus
-variable Boltzmann
-create lattice 16384 allot					\ 64 * 64 lattice space allocation
-1846835896 constant critical				\ critical beta for a 64*64 lattice, by experiment
+variable dimension					\ dimension is the width and height of the array
+variable modulus					\ modulus = width*height
+variable Boltzmann					\ Boltzmann beta ( 1 / T )
+1846835896 constant critical			\ critical beta for a 64*64 lattice, by experiment
+create lattice 16384 allot				\ 64 * 64 lattice space allocation
 
-: newlattice ( n - prepare an n * n lattice)
+: newlattice ( n - prepare an n * n lattice, initiation of an Ising model experiment)
 	dup dimension !			( n)
 	dup * dup modulus !			( nn)
 	lattice dup rot + swap			( nn end-addr addr)
@@ -207,12 +217,12 @@ create lattice 16384 allot					\ 64 * 64 lattice space allocation
 	IF flip ELSE drop THEN			\ conditional flip
 ;
 
-: run ( n -- run n iterations of the metropolis algorithm)
-	0 DO metropolis LOOP
+: run ( n -- run n iterations of the metropolis algorithm, used to equlibriate at a given Boltzmann beta)
+	0 DO metropolis LOOP				\ need to (1) initiate with newlattice and (2) set Boltzmann beta, first
 ;
 
-: render ( display the lattice)
-	cr
+: render ( display the lattice in ASCII format)
+	cr						
 	lattice
 	dimension @ 0 DO
 		dimension @ 0 DO
@@ -223,12 +233,12 @@ create lattice 16384 allot					\ 64 * 64 lattice space allocation
 	drop
 ;
 
-: simulate ( Monte-Carlo Ising simulation)
+: simulate ( Monte-Carlo Ising simulation, hard-coded paramarters for simplicity here)
 	cr ." Magnetization	Energy		Heat Capacity" cr
 	64 newlattice
-	4294967295 0 DO			\ range of Boltzmann factors
+	4294967295 0 DO			\ range of Boltzmann beta values from 0.00000 to .99999
 		i dup u. Boltzmann !
 		1000000 run			\ equlibriate
 		stats 9 emit . 9 emit . 9 emit  . cr
-	42949672 +LOOP
+	42949672 +LOOP			\ step size through Boltzmann beta
 ;

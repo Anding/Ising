@@ -1,4 +1,9 @@
-\ graphical extensions for the NIGE Machine
+\ Ising model simulation in FORTH
+\ Andrew Read
+\ (C) 2012, GNU General Public License
+\ \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+\ Graphical extensions for the NIGE Machine
 
 : render-n ( display the lattice, for NIGE Machine)
 	csr-off 0 csr-x ! 3 csr-y !
@@ -13,17 +18,17 @@
 	drop
 	stats 
 	cr
-	." Magnetization " . space space space
-	." Lattice energy " . space space space
-	." Lattice heat capacity " .
+	." Magnetization " . ."   " cr
+	." Lattice energy " . ."   " cr
+	." Lattice heat capacity " . ."   " 
 ;
 
-: run-n ( -- indefiante iterations of the metropolis algorithm, for NIGE Machine)
+: run-n ( -- indefinate iteration of the metropolis algorithm for NIGE Machine, press any key to stop)
 	cls
 	BEGIN
 		1000 0 DO metropolis LOOP
 		render-n		
-		key? not
-	WHILE
-	REPEAT
+		key?
+	UNTIL
+	key drop cr
 ;
