@@ -11,11 +11,13 @@ variable Xn		\ last random number
 ;
 
 : rnd ( -- u, random number between 0 and 2^32 - 1, often treated as a fraction)
-	Xn dup @ 3141592621 UM*
+	Xn dup @ 3141592621 UM*				\  3141592621
 	1 0 D+
 	drop
 	dup rot !
 ;
+
+: t rnd 32 u.r ;
 
 : rnd-int ( u -- u, pick a random integer between 0 and u)
 	rnd um* nip
@@ -136,9 +138,9 @@ variable dimension					\ dimension is the width and height of the array
 variable modulus					\ modulus = width*height
 variable Boltzmann					\ Boltzmann beta ( 1 / T )
 1846835896 constant critical			\ critical beta for a 64*64 lattice, by experiment
-create lattice 16384 allot				\ 64 * 64 lattice space allocation
+create lattice 16384 allot				\ 128 * 128 lattice space allocation
 
-: newlattice ( n - prepare an n * n lattice, initiation of an Ising model experiment)
+: newlattice ( n - prepare an n * n lattice, initiation of an Ising model experiment, BUT n MUST BE A POWER OF TWO)
 	dup dimension !			( n)
 	dup * dup modulus !			( nn)
 	lattice dup rot + swap			( nn end-addr addr)
@@ -158,7 +160,7 @@ create lattice 16384 allot				\ 64 * 64 lattice space allocation
 ;
 
 : neighbours ( n -- n1 n2 n3 n4, find the nearest neighbours of the cell)
-	modulus @ 1- >R 			\ circular boundary conditions
+	modulus @ 1- >R 			\ circular boundary conditions BUT dimension MUST BE A POWER OF TWO
 	1+ R@ and					( right)
 	dup 2 - R@ and				( right left)
 	dup 1+ dimension @ dup rot + R@ and	( right left dim down)

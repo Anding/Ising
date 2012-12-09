@@ -5,22 +5,27 @@
 
 \ Graphical extensions for the NIGE Machine
 
-: render-n ( display the lattice, for NIGE Machine)
-	csr-off 0 csr-x ! 3 csr-y !
+: render-n ( display the lattice, for NIGE Machine) 
+	csr-off 0 csr-x ! 0 csr-y !
 	lattice
-	dimension @ 0 DO
-		9 emit
-		dimension @ 0 DO
+	dimension @ 73 min 0 DO
+		dimension @ 100 min 0 DO
 			dup c@ 2 = if 159 else 160 then emit
 			1+
-		LOOP CR
+		LOOP 
+		dimension @ 100 - dup 0> IF 
+			+			\ update for skipped columns
+		ELSE	
+			CR			\ newline
+			drop
+		THEN
 	LOOP
 	drop
 	stats 
 	cr
-	." Magnetization " . ."   " cr
-	." Lattice energy " . ."   " cr
-	." Lattice heat capacity " . ."   " 
+	." Magnetization " 4 .r 9 emit
+	." Lattice energy " 5 .r 9 emit
+	." Lattice heat capacity " 4 .r 
 ;
 
 : run-n ( -- indefinate iteration of the metropolis algorithm for NIGE Machine, press any key to stop)
@@ -30,5 +35,5 @@
 		render-n		
 		key?
 	UNTIL
-	key drop cr
+	key drop
 ;
