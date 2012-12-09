@@ -96,10 +96,10 @@ create exptab		\ evenly spaced probabilites in the range 0 <= x < 1
 201326592 ,
 67108864 ,
 
-hex 
-20000000 constant 1<<29 
-80000000 constant 1<<31
-decimal
+1 24 lshift constant 1<<24 
+1 29 lshift constant 1<<29 
+1 31 lshift constant 1<<31
+
 
 : negexp ( frac int -- frac, return Exp[-x] where x is a postive number expressed as frac and int and int < 8)
 		\ first convert frac int to a single frac by dividing by 8 and combining the fractional and integer parts
@@ -137,8 +137,8 @@ decimal
 variable dimension					\ dimension is the width and height of the array
 variable modulus					\ modulus = width*height
 variable Boltzmann					\ Boltzmann beta ( 1 / T )
-1846835896 constant critical			\ critical beta for a 64*64 lattice, by experiment
-create lattice 16384 allot				\ 128 * 128 lattice space allocation
+1846835896 constant critical			\ critical beta, by experiment in this system
+create lattice 16384 allot				\ lattice space allocation sufficient for 128 * 128 
 
 : newlattice ( n - prepare an n * n lattice, initiation of an Ising model experiment, BUT n MUST BE A POWER OF TWO)
 	dup dimension !			( n)
@@ -233,14 +233,4 @@ create lattice 16384 allot				\ 128 * 128 lattice space allocation
 		LOOP CR
 	LOOP
 	drop
-;
-
-: simulate ( Monte-Carlo Ising simulation, hard-coded paramarters for simplicity here)
-	cr ." Magnetization	Energy		Heat Capacity" cr
-	64 newlattice
-	4294967295 0 DO			\ range of Boltzmann beta values from 0.00000 to .99999
-		i dup u. Boltzmann !
-		1000000 run			\ equlibriate
-		stats 9 emit . 9 emit . 9 emit  . cr
-	42949672 +LOOP			\ step size through Boltzmann beta
 ;
