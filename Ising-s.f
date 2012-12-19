@@ -5,11 +5,10 @@
 
 \ functionality for running simulations with numerical results
 
-8 constant n1						\ define the sample size as 2^n1, e.g. 256
-5 constant n2						\ define the number of runs as 2^n2, e.g. 32
+10000 constant runcount				\ define the number of runs for averaging
+8 constant n1						\ define the numer of steps across temperature as 2^n1, e.g. 256
 1 n1 lshift constant samples
 1 32 n1 - lshift constant step
-1 n2 lshift constant runcount
 create magnetization{ samples 4 * allot
 create energy{ samples 4 * allot
 create heatcapacity{ samples 4 * allot
@@ -24,17 +23,18 @@ create heatcapacity{ samples 4 * allot
 		0 energy{ i } !
 		0 heatcapacity{ i } !
 	LOOP
-	runcount 0 DO					\ simulation runs
-		64 newlattice
-		samples 0 DO			
-			i step * Boltzmann !	\ step size
-			1000000 run			\ equlibriate
+	64 newlattice
+	samples 0 DO			
+		i step * Boltzmann !		\ step size
+		500000 run			\ pre-equlibriate
+		runcount 0 DO
+			50000 run
 			stats 				( C E M)
-			abs magnetization{ i } +!
-			energy{ i } +!
-			heatcapacity{ i } +!
-		LOOP	
-	LOOP
+			abs magnetization{ j } +!
+			energy{ j } +!
+			heatcapacity{ j } +!
+		LOOP
+	LOOP	
 	
 ;
 
