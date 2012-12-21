@@ -24,8 +24,8 @@
 	stats 
 	cr
 	." Magnetization " 4 .r 9 emit
+	drop
 	." Lattice energy " 5 .r 9 emit
-	." Lattice heat capacity " 4 .r 
 ;
 
 : run-n ( -- indefinate iteration of the metropolis algorithm for NIGE Machine, press any key to stop)
