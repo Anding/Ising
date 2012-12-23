@@ -9,7 +9,7 @@
 	csr-off 0 csr-x ! 0 csr-y !
 	lattice
 	dimension @ ROWS C@ 2 - min 0 DO
-		dimension @ 100 min 0 DO
+		dimension @ COLS c@ min 0 DO
 			dup c@ 2 = if 159 else 160 then emit
 			1+
 		LOOP 
