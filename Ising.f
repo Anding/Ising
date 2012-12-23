@@ -330,7 +330,7 @@ create exptab		\ evenly spaced probabilites in the range 0 <= x < 1
 variable dimension					\ dimension is the width and height of the array
 variable modulus					\ modulus = width*height
 variable Boltzmann					\ Boltzmann beta ( 1 / T )
-1845493760 constant critical			\ critical beta, by experiment in this system
+1892735628 constant critical			\ critical beta, 2^32 / 2.269185
 create lattice 16384 allot				\ lattice space allocation sufficient for 128 * 128 
 
 : newlattice ( n - prepare an n * n lattice, initiation of an Ising model experiment, BUT n MUST BE A POWER OF TWO)

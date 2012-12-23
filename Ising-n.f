@@ -8,12 +8,12 @@
 : render-n ( display the lattice, for NIGE Machine) 
 	csr-off 0 csr-x ! 0 csr-y !
 	lattice
-	dimension @ 73 min 0 DO
+	dimension @ ROWS C@ 2 - min 0 DO
 		dimension @ 100 min 0 DO
 			dup c@ 2 = if 159 else 160 then emit
 			1+
 		LOOP 
-		dimension @ 100 - dup 0> IF 
+		dimension @ COLS C@ - dup 0> IF 
 			+			\ update for skipped columns
 		ELSE	
 			CR			\ newline
@@ -29,7 +29,7 @@
 ;
 
 : run-n ( -- indefinate iteration of the metropolis algorithm for NIGE Machine, press any key to stop)
-	cls
+	0 interlace cls				\ expect non-interlaced screen
 	BEGIN
 		1000 0 DO metropolis LOOP
 		render-n		
