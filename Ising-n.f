@@ -10,7 +10,7 @@
 	lattice
 	dimension @ ROWS C@ 2 - min 0 DO
 		dimension @ COLS c@ min 0 DO
-			dup c@ 2 = if 159 else 160 then emit
+			dup c@ 2 = if 159 else 160 then vemitraw
 			1+
 		LOOP 
 		dimension @ COLS C@ - dup 0> IF 
@@ -26,14 +26,30 @@
 	." Magnetization " 4 .r 9 emit
 	drop
 	." Lattice energy " 5 .r 9 emit
+	." Boltzmann " Boltzmann @ u.
 ;
 
-: run-n ( -- indefinate iteration of the metropolis algorithm for NIGE Machine, press any key to stop)
-	0 interlace cls				\ expect non-interlaced screen
+: UMAX ( a b -- u, unsigned maximum of a and b)
+	over over
+	U> IF DROP ELSE NIP THEN
+;
+
+: UMIN ( a b -- u, unsigned minimum of a and b)
+	over over
+	U< IF DROP ELSE NIP THEN
+;
+
+: run-n ( -- indefinate iteration of the metropolis algorithm for NIGE Machine, press UP / DOWN to raise or lower temp, or ESC to stop)
+	0 interlace cls				\ need non-interlaced screen
 	BEGIN
 		1000 0 DO metropolis LOOP
 		render-n		
-		key?
-	UNTIL
-	key drop
+		key? IF
+			key CASE
+				4 OF Boltzmann dup @ 10000000 UMAX 1000000 - swap ! ENDOF
+				5 OF Boltzmann dup @ 4284967295 UMIN 1000000 + swap ! ENDOF
+				27 OF EXIT ENDOF
+			ENDCASE
+		THEN
+	AGAIN
 ;

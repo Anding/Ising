@@ -345,7 +345,7 @@ create lattice 16384 allot				\ lattice space allocation sufficient for 128 * 12
 		THEN
 		i c!						\ write byte value
 	LOOP
-	4294967295 Boltzmann !				\ reset temperature
+	critical Boltzmann !				\ reset temperature
 ; 
 
 : rnd-cell ( -- n, pick a random cell in the lattice)
